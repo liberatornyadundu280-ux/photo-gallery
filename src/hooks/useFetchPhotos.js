@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 
+const CATEGORIES = [
+  "prize-giving",
+  "sciences",
+  "cultural-day",
+  "ict",
+  "sport",
+  "arts",
+];
+
 function useFetchPhotos() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +21,11 @@ function useFetchPhotos() {
         return res.json();
       })
       .then((data) => {
-        setPhotos(data);
+        const categorized = data.map((photo, i) => ({
+          ...photo,
+          category: CATEGORIES[i % CATEGORIES.length],
+        }));
+        setPhotos(categorized);
         setLoading(false);
       })
       .catch((err) => {

@@ -21,6 +21,14 @@ function getInitialFavourites() {
   return saved ? JSON.parse(saved) : [];
 }
 
+function formatCategory(slug) {
+  if (!slug) return "Photo Gallery";
+  return slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function App() {
   const { photos, loading, error } = useFetchPhotos();
 
@@ -30,6 +38,11 @@ function App() {
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  const categoryFilter = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("category") || "";
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("favourites", JSON.stringify(favourites));
@@ -44,10 +57,15 @@ function App() {
   }, []);
 
   const filteredPhotos = useMemo(() => {
-    return photos.filter((photo) =>
-      photo.author.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [photos, searchQuery]);
+    return photos.filter((photo) => {
+      const matchesSearch = photo.author
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        !categoryFilter || photo.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [photos, searchQuery, categoryFilter]);
 
   // ── Loading ───────────────────────────────────────────
   if (loading) {
@@ -90,12 +108,20 @@ function App() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="title-font text-5xl font-extrabold text-white mb-2 tracking-tight">
-            Photo Gallery
+            {formatCategory(categoryFilter)}
           </h1>
           <p className="text-blue-200 text-sm tracking-widest uppercase">
             {filteredPhotos.length} photos &nbsp;•&nbsp; {favourites.length}{" "}
             favourites
           </p>
+          {categoryFilter && (
+            <a
+              href="/"
+              className="inline-block mt-3 text-xs text-blue-300 hover:text-white tracking-widest uppercase transition-colors"
+            >
+              ← All Photos
+            </a>
+          )}
         </div>
 
         {/* Search */}
